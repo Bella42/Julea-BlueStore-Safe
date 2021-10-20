@@ -1,0 +1,202 @@
+# JULEA - Flexible storage framework
+# Copyright (C) 2017-2019 Michael Kuhn
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+spack_clone ()
+{
+	local spack_commit
+
+	spack_commit='ae6229dee20da04b2120dc97cdfae800c136e42a'
+
+	test -n "${SPACK_DIR}" || return 1
+
+	if test ! -d "${SPACK_DIR}"
+	then
+		git clone https://github.com/spack/spack.git "${SPACK_DIR}"
+	fi
+
+	test -d "${SPACK_DIR}" || return 1
+
+	(
+		cd "${SPACK_DIR}"
+
+		git fetch
+		git reset --hard "${spack_commit}"
+		# FIXME stay on the 1.12 branch until a release is made
+		sed -i "s/version('develop', branch='develop')/version('develop', branch='hdf5_1_12')/" var/spack/repos/builtin/packages/hdf5/package.py
+	)
+
+	return 0
+}
+
+spack_init ()
+{
+	local modules_dir
+	local spack_env
+
+	test -n "${SPACK_DIR}" || return 1
+	test -d "${SPACK_DIR}" || return 1
+
+	spack_env="${SPACK_DIR}/share/spack/setup-env.sh"
+
+	test -f "${spack_env}" || return 1
+
+	# FIXME work around https://github.com/spack/spack/pull/13716
+	if test -f /etc/profile.d/modules.sh
+	then
+		. /etc/profile.d/modules.sh
+	fi
+
+	. "${spack_env}"
+
+	return 0
+}
+
+spack_bootstrap ()
+{
+	test -n "${SPACK_DIR}" || return 1
+	test -d "${SPACK_DIR}" || return 1
+
+	(
+		cd "${SPACK_DIR}"
+
+		# FIXME only install if necessary? (command -v module > /dev/null 2>&1)
+		# Use bootstrap to install environment-modules, otherwise the shell integration might not find it.
+		./bin/spack bootstrap
+	)
+}
+
+spack_install ()
+{
+	local spack_pkg
+
+	spack_pkg="$1"
+
+	test -n "${SPACK_DIR}" || return 1
+	test -d "${SPACK_DIR}" || return 1
+	test -n "${spack_pkg}" || return 1
+
+	(
+		cd "${SPACK_DIR}"
+
+		./bin/spack install "${spack_pkg}"
+	)
+}
+
+spack_load ()
+{
+	local spack_pkg
+
+	spack_pkg="$1"
+
+	test -n "${spack_pkg}" || return 1
+
+	spack load --dependencies "${spack_pkg}"
+}
+
+spack_get_dependencies ()
+{
+	local dependencies
+	local mode
+
+	dependencies=''
+	mode="$1"
+
+	if test "${mode}" = 'full' -o "${mode}" = 'standard' -o "${mode}" = 'minimal'
+	then
+		# Required for Waf
+		dependencies="${dependencies} pkgconfig"
+
+		# Mandatory dependencies
+		dependencies="${dependencies} glib"
+		dependencies="${dependencies} libbson"
+	fi
+
+	if test "${mode}" = 'full' -o "${mode}" = 'standard'
+	then
+		# Optional dependencies
+		dependencies="${dependencies} lmdb"
+		dependencies="${dependencies} sqlite"
+	fi
+
+	if test "${mode}" = 'full'
+	then
+		# Optional dependencies
+		dependencies="${dependencies} leveldb"
+		dependencies="${dependencies} mongo-c-driver"
+		dependencies="${dependencies} hdf5@develop~mpi"
+		dependencies="${dependencies} mariadb-c-client"
+
+		# FIXME move to minimal
+		# FIXME set fabrics
+		dependencies="${dependencies} libfabric"
+
+		#dependencies="${dependencies} mpi"
+		#dependencies="${dependencies} otf"
+	fi
+
+	printf '%s' "${dependencies}"
+}
+
+spack_load_dependencies ()
+{
+	if test -z "${JULEA_SPACK_DEPENDENCIES_LOADED}"
+	then
+		local minimal_pkgs
+
+		minimal_pkgs="$(spack_get_dependencies minimal)"
+
+		if spack_init
+		then
+			for dependency in $(spack_get_dependencies full)
+			do
+				if test "${minimal_pkgs#*${dependency}}" != "${minimal_pkgs}"
+				then
+					spack_load "${dependency}"
+				else
+					if ! spack_load "${dependency}"
+					then
+						echo "Dependency ${dependency} cannot be loaded. If you have not installed it, you can ignore the error above." >&2
+					fi
+				fi
+			done
+
+			# FIXME this could be more clever by storing the actual dependencies loaded
+			JULEA_SPACK_DEPENDENCIES_LOADED=1
+
+			export JULEA_SPACK_DEPENDENCIES_LOADED
+		fi
+	fi
+}
+
+spack_install_dependencies ()
+{
+	local mode
+
+	mode="$1"
+
+	test -n "${mode}" || return 1
+
+	if spack_clone
+	then
+		spack_bootstrap
+
+		for dependency in $(spack_get_dependencies "${mode}")
+		do
+			# FIXME ignore errors?
+			spack_install "${dependency}"
+		done
+	fi
+}
