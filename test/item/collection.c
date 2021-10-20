@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -70,7 +70,7 @@ test_collection_name(JCollection** collection, gconstpointer data)
 }
 
 void
-test_collection(void)
+test_item_collection(void)
 {
 	g_test_add_func("/item/collection/new_free", test_collection_new_free);
 	g_test_add("/item/collection/name", JCollection*, NULL, test_collection_fixture_setup, test_collection_name, test_collection_fixture_teardown);

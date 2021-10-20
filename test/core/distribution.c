@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -214,9 +214,9 @@ test_distribution_weighted(JConfiguration** configuration, gconstpointer data)
 }
 
 void
-test_distribution(void)
+test_core_distribution(void)
 {
-	g_test_add("/distribution/round_robin", JConfiguration*, NULL, test_distribution_fixture_setup, test_distribution_round_robin, test_distribution_fixture_teardown);
-	g_test_add("/distribution/single_server", JConfiguration*, NULL, test_distribution_fixture_setup, test_distribution_single_server, test_distribution_fixture_teardown);
-	g_test_add("/distribution/weighted", JConfiguration*, NULL, test_distribution_fixture_setup, test_distribution_weighted, test_distribution_fixture_teardown);
+	g_test_add("/core/distribution/round_robin", JConfiguration*, NULL, test_distribution_fixture_setup, test_distribution_round_robin, test_distribution_fixture_teardown);
+	g_test_add("/core/distribution/single_server", JConfiguration*, NULL, test_distribution_fixture_setup, test_distribution_single_server, test_distribution_fixture_teardown);
+	g_test_add("/core/distribution/weighted", JConfiguration*, NULL, test_distribution_fixture_setup, test_distribution_weighted, test_distribution_fixture_teardown);
 }

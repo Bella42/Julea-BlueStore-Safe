@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2019 Michael Kuhn
+ * Copyright (C) 2019-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -85,11 +85,13 @@ j_db_fini(void)
 	if (j_db_backend != NULL)
 	{
 		j_backend_db_fini(j_db_backend);
+		j_db_backend = NULL;
 	}
 
-	if (j_db_module)
+	if (j_db_module != NULL)
 	{
 		g_module_close(j_db_module);
+		j_db_module = NULL;
 	}
 }
 

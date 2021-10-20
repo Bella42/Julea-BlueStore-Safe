@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -102,7 +102,7 @@ test_item_modification_time(JItem** item, gconstpointer data)
 }
 
 void
-test_item(void)
+test_item_item(void)
 {
 	g_test_add_func("/item/item/new_free", test_item_new_free);
 	g_test_add("/item/item/ref_unref", JItem*, NULL, test_item_fixture_setup, test_item_ref_unref, test_item_fixture_teardown);

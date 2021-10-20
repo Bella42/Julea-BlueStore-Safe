@@ -1,5 +1,5 @@
 # JULEA - Flexible storage framework
-# Copyright (C) 2017-2019 Michael Kuhn
+# Copyright (C) 2017-2020 Michael Kuhn
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -18,7 +18,8 @@ spack_clone ()
 {
 	local spack_commit
 
-	spack_commit='ae6229dee20da04b2120dc97cdfae800c136e42a'
+	# FIXME maybe use release branch instead
+	spack_commit='cc53ff162fa09e4378c318bbb8e7d7f6ebeca500'
 
 	test -n "${SPACK_DIR}" || return 1
 
@@ -34,8 +35,6 @@ spack_clone ()
 
 		git fetch
 		git reset --hard "${spack_commit}"
-		# FIXME stay on the 1.12 branch until a release is made
-		sed -i "s/version('develop', branch='develop')/version('develop', branch='hdf5_1_12')/" var/spack/repos/builtin/packages/hdf5/package.py
 	)
 
 	return 0
@@ -53,18 +52,12 @@ spack_init ()
 
 	test -f "${spack_env}" || return 1
 
-	# FIXME work around https://github.com/spack/spack/pull/13716
-	if test -f /etc/profile.d/modules.sh
-	then
-		. /etc/profile.d/modules.sh
-	fi
-
 	. "${spack_env}"
 
 	return 0
 }
 
-spack_bootstrap ()
+spack_cmd ()
 {
 	test -n "${SPACK_DIR}" || return 1
 	test -d "${SPACK_DIR}" || return 1
@@ -72,38 +65,23 @@ spack_bootstrap ()
 	(
 		cd "${SPACK_DIR}"
 
-		# FIXME only install if necessary? (command -v module > /dev/null 2>&1)
-		# Use bootstrap to install environment-modules, otherwise the shell integration might not find it.
-		./bin/spack bootstrap
-	)
-}
-
-spack_install ()
-{
-	local spack_pkg
-
-	spack_pkg="$1"
-
-	test -n "${SPACK_DIR}" || return 1
-	test -d "${SPACK_DIR}" || return 1
-	test -n "${spack_pkg}" || return 1
-
-	(
-		cd "${SPACK_DIR}"
-
-		./bin/spack install "${spack_pkg}"
+		./bin/spack "$@"
 	)
 }
 
 spack_load ()
 {
+	local pkg_loaded
 	local spack_pkg
 
+	pkg_loaded='YES'
 	spack_pkg="$1"
 
 	test -n "${spack_pkg}" || return 1
 
-	spack load --dependencies "${spack_pkg}"
+	spack load --dependencies "${spack_pkg}" || pkg_loaded='NO'
+
+	printf 'Dependency "%s" loaded: %s\n' "${spack_pkg}" "${pkg_loaded}"
 }
 
 spack_get_dependencies ()
@@ -116,7 +94,8 @@ spack_get_dependencies ()
 
 	if test "${mode}" = 'full' -o "${mode}" = 'standard' -o "${mode}" = 'minimal'
 	then
-		# Required for Waf
+		# Required for building JULEA
+		dependencies="${dependencies} meson"
 		dependencies="${dependencies} pkgconfig"
 
 		# Mandatory dependencies
@@ -136,12 +115,12 @@ spack_get_dependencies ()
 		# Optional dependencies
 		dependencies="${dependencies} leveldb"
 		dependencies="${dependencies} mongo-c-driver"
-		dependencies="${dependencies} hdf5@develop~mpi"
+		dependencies="${dependencies} hdf5#@1.12:#~mpi"
 		dependencies="${dependencies} mariadb-c-client"
+		dependencies="${dependencies} rocksdb"
 
 		# FIXME move to minimal
-		# FIXME set fabrics
-		dependencies="${dependencies} libfabric"
+		dependencies="${dependencies} libfabric#fabrics=sockets,tcp,udp,verbs,rxd,rxm"
 
 		#dependencies="${dependencies} mpi"
 		#dependencies="${dependencies} otf"
@@ -154,23 +133,12 @@ spack_load_dependencies ()
 {
 	if test -z "${JULEA_SPACK_DEPENDENCIES_LOADED}"
 	then
-		local minimal_pkgs
-
-		minimal_pkgs="$(spack_get_dependencies minimal)"
-
 		if spack_init
 		then
 			for dependency in $(spack_get_dependencies full)
 			do
-				if test "${minimal_pkgs#*${dependency}}" != "${minimal_pkgs}"
-				then
-					spack_load "${dependency}"
-				else
-					if ! spack_load "${dependency}"
-					then
-						echo "Dependency ${dependency} cannot be loaded. If you have not installed it, you can ignore the error above." >&2
-					fi
-				fi
+				dependency="$(printf '%s' "${dependency}" | sed 's/#/ /g')"
+				spack_load "${dependency}"
 			done
 
 			# FIXME this could be more clever by storing the actual dependencies loaded
@@ -178,6 +146,8 @@ spack_load_dependencies ()
 
 			export JULEA_SPACK_DEPENDENCIES_LOADED
 		fi
+	else
+		printf 'Dependencies have already been loaded, skipping.\n' >&2
 	fi
 }
 
@@ -191,12 +161,15 @@ spack_install_dependencies ()
 
 	if spack_clone
 	then
-		spack_bootstrap
+		spack_cmd mark --implicit --all
 
 		for dependency in $(spack_get_dependencies "${mode}")
 		do
+			dependency="$(printf '%s' "${dependency}" | sed 's/#/ /g')"
 			# FIXME ignore errors?
-			spack_install "${dependency}"
+			spack_cmd install "${dependency}"
 		done
+
+		spack_cmd gc --yes-to-all
 	fi
 }

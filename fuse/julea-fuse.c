@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +21,8 @@
 #include "julea-fuse.h"
 
 #include <glib.h>
+
+#include <locale.h>
 
 struct fuse_operations jfs_vtable = {
 	.access = jfs_access,
@@ -44,6 +46,9 @@ int
 main(int argc, char** argv)
 {
 	gint ret;
+
+	// Explicitly enable UTF-8 since functions such as g_format_size might return UTF-8 characters.
+	setlocale(LC_ALL, "C.UTF-8");
 
 	ret = fuse_main(argc, argv, &jfs_vtable, NULL);
 

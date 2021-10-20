@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -161,7 +161,7 @@ j_configuration(void)
 	if (g_atomic_pointer_get(&configuration) == NULL)
 	{
 		// FIXME never freed
-		g_atomic_pointer_compare_and_exchange(&configuration, NULL, j_configuration_new());
+		g_atomic_pointer_compare_and_exchange(&configuration, (JConfiguration*)NULL, j_configuration_new());
 	}
 
 	return configuration;

@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -137,7 +137,7 @@ test_uri_get(void)
 }
 
 void
-test_uri(void)
+test_item_uri(void)
 {
 	g_test_add_func("/item/uri/new_free", test_uri_new_free);
 	g_test_add_func("/item/uri/valid", test_uri_valid);

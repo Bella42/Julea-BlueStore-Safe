@@ -1,5 +1,5 @@
 # JULEA - Flexible storage framework
-# Copyright (C) 2017-2019 Michael Kuhn
+# Copyright (C) 2017-2020 Michael Kuhn
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -21,21 +21,45 @@ get_directory ()
 	directory="$1"
 
 	test -n "${directory}" || return 1
+	test -d "${directory}" || return 1
 
 	printf '%s' "$(readlink --canonicalize-existing -- "${directory}")"
 }
 
+error_build_directory_not_found ()
+{
+	if test -n "${JULEA_ENVIRONMENT}"
+	then
+		return 0
+	fi
+
+	printf 'Build directory could not be found.\n' >&2
+	printf '* If you have installed JULEA, please set JULEA_PREFIX to the prefix you have installed it in.\n' >&2
+	printf '* If you want to use an uninstalled version, make sure the build directory is called "bld".\n' >&2
+
+	exit 1
+}
+
 set_path ()
 {
+	local build_dir
+	local old_path
+
+	build_dir="$(get_directory "${SELF_DIR}/..")/bld"
+	old_path="${PATH}"
+
 	if test -n "${JULEA_PREFIX}"
 	then
-		PATH="${JULEA_PREFIX}/bin:${PATH}"
+		PATH="${JULEA_PREFIX}/bin"
 	else
-		local build_dir
+		test -d "${build_dir}" || error_build_directory_not_found
 
-		build_dir="$(get_directory "${SELF_DIR}/../build")"
+		PATH="${build_dir}"
+	fi
 
-		PATH="${build_dir}/benchmark:${build_dir}/server:${build_dir}/test:${build_dir}/tools:${PATH}"
+	if test -n "${old_path}"
+	then
+		PATH="${PATH}:${old_path}"
 	fi
 
 	export PATH
@@ -43,15 +67,24 @@ set_path ()
 
 set_library_path ()
 {
+	local build_dir
+	local old_path
+
+	build_dir="$(get_directory "${SELF_DIR}/..")/bld"
+	old_path="${LD_LIBRARY_PATH}"
+
 	if test -n "${JULEA_PREFIX}"
 	then
-		LD_LIBRARY_PATH="${JULEA_PREFIX}/lib64:${JULEA_PREFIX}/lib:${LD_LIBRARY_PATH}"
+		LD_LIBRARY_PATH="${JULEA_PREFIX}/lib64:${JULEA_PREFIX}/lib/x86_64-linux-gnu:${JULEA_PREFIX}/lib"
 	else
-		local build_dir
+		test -d "${build_dir}" || error_build_directory_not_found
 
-		build_dir="$(get_directory "${SELF_DIR}/../build")"
+		LD_LIBRARY_PATH="${build_dir}"
+	fi
 
-		LD_LIBRARY_PATH="${build_dir}/lib:${LD_LIBRARY_PATH}"
+	if test -n "${old_path}"
+	then
+		LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${old_path}"
 	fi
 
 	export LD_LIBRARY_PATH
@@ -59,15 +92,24 @@ set_library_path ()
 
 set_pkg_config_path ()
 {
+	local build_dir
+	local old_path
+
+	build_dir="$(get_directory "${SELF_DIR}/..")/bld"
+	old_path="${PKG_CONFIG_PATH}"
+
 	if test -n "${JULEA_PREFIX}"
 	then
-		PKG_CONFIG_PATH="${JULEA_PREFIX}/lib64/pkgconfig:${JULEA_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+		PKG_CONFIG_PATH="${JULEA_PREFIX}/lib64/pkgconfig:${JULEA_PREFIX}/lib/x86_64-linux-gnu/pkgconfig:${JULEA_PREFIX}/lib/pkgconfig"
 	else
-		local build_dir
+		test -d "${build_dir}" || error_build_directory_not_found
 
-		build_dir="$(get_directory "${SELF_DIR}/../build")"
+		PKG_CONFIG_PATH="${build_dir}/meson-uninstalled"
+	fi
 
-		PKG_CONFIG_PATH="${build_dir}/pkg-config:${PKG_CONFIG_PATH}"
+	if test -n "${old_path}"
+	then
+		PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${old_path}"
 	fi
 
 	export PKG_CONFIG_PATH
@@ -75,14 +117,43 @@ set_pkg_config_path ()
 
 set_backend_path ()
 {
-	if test -z "${JULEA_PREFIX}"
+	local build_dir
+
+	build_dir="$(get_directory "${SELF_DIR}/..")/bld"
+
+	if test -n "${JULEA_PREFIX}"
 	then
-		local build_dir
+		return 0
+	else
+		test -d "${build_dir}" || error_build_directory_not_found
 
-		build_dir="$(get_directory "${SELF_DIR}/../build")"
-
-		JULEA_BACKEND_PATH="${build_dir}/backend"
+		JULEA_BACKEND_PATH="${build_dir}"
 	fi
 
 	export JULEA_BACKEND_PATH
+}
+
+set_hdf_path ()
+{
+	local build_dir
+	local old_path
+
+	build_dir="$(get_directory "${SELF_DIR}/..")/bld"
+	old_path="${HDF5_PLUGIN_PATH}"
+
+	if test -n "${JULEA_PREFIX}"
+	then
+		HDF5_PLUGIN_PATH="${JULEA_PREFIX}/lib64:${JULEA_PREFIX}/lib/x86_64-linux-gnu:${JULEA_PREFIX}/lib"
+	else
+		test -d "${build_dir}" || error_build_directory_not_found
+
+		HDF5_PLUGIN_PATH="${build_dir}"
+	fi
+
+	if test -n "${old_path}"
+	then
+		HDF5_PLUGIN_PATH="${HDF5_PLUGIN_PATH}:${old_path}"
+	fi
+
+	export HDF5_PLUGIN_PATH
 }

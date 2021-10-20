@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,25 +21,31 @@
 
 #include <glib.h>
 
-struct BenchmarkResult
+struct BenchmarkRun
 {
-	gdouble elapsed_time;
+	gchar* name;
+	void (*func)(struct BenchmarkRun*);
+	GTimer* timer;
+	gboolean timer_started;
+	guint iterations;
 	guint64 operations;
 	guint64 bytes;
 };
 
-typedef struct BenchmarkResult BenchmarkResult;
+typedef struct BenchmarkRun BenchmarkRun;
 
 #include <jsemantics.h>
 
-typedef void (*BenchmarkFunc)(BenchmarkResult*);
+typedef void (*BenchmarkFunc)(BenchmarkRun*);
 
 JSemantics* j_benchmark_get_semantics(void);
 
-void j_benchmark_timer_start(void);
-gdouble j_benchmark_timer_elapsed(void);
+void j_benchmark_timer_start(BenchmarkRun*);
+void j_benchmark_timer_stop(BenchmarkRun*);
 
-void j_benchmark_run(gchar const*, BenchmarkFunc);
+gboolean j_benchmark_iterate(BenchmarkRun*);
+
+void j_benchmark_add(gchar const*, BenchmarkFunc);
 
 void benchmark_background_operation(void);
 void benchmark_cache(void);
@@ -51,9 +57,12 @@ void benchmark_kv(void);
 void benchmark_distributed_object(void);
 void benchmark_object(void);
 
+void benchmark_db_schema(void);
+
 void benchmark_collection(void);
 void benchmark_item(void);
 
 void benchmark_hdf(void);
+void benchmark_hdf_dai(void);
 
 #endif

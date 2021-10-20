@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2017-2019 Michael Kuhn
+ * Copyright (C) 2017-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@
 #ifndef JULEA_HDF5_HDF5_H
 #define JULEA_HDF5_HDF5_H
 
-#if !defined(JULEA_HDF5_H) && !defined(JULEA_HDF5_COMPILATION)
+#if !defined(JULEA_HDF5_H) && !defined(JULEA_HDF5_COMPILATION) && !defined(JULEA_HDF5_DB_COMPILATION)
 #error "Only <julea-hdf5.h> can be included directly."
 #endif
 
@@ -35,7 +35,6 @@
 
 G_BEGIN_DECLS
 
-hid_t j_hdf5_get_fapl(void);
 void j_hdf5_set_semantics(JSemantics*);
 
 G_END_DECLS

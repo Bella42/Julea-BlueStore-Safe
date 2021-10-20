@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -84,8 +84,8 @@ test_semantics_set_get(JSemantics** semantics, G_GNUC_UNUSED gconstpointer data)
 }
 
 void
-test_semantics(void)
+test_core_semantics(void)
 {
-	g_test_add_func("/semantics/new_ref_unref", test_semantics_new_ref_unref);
-	g_test_add("/semantics/set_get", JSemantics*, NULL, test_semantics_fixture_setup, test_semantics_set_get, test_semantics_fixture_teardown);
+	g_test_add_func("/core/semantics/new_ref_unref", test_semantics_new_ref_unref);
+	g_test_add("/core/semantics/set_get", JSemantics*, NULL, test_semantics_fixture_setup, test_semantics_set_get, test_semantics_fixture_teardown);
 }

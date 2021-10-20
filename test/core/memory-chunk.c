@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -81,9 +81,9 @@ test_memory_chunk_reset(void)
 }
 
 void
-test_memory_chunk(void)
+test_core_memory_chunk(void)
 {
-	g_test_add_func("/memory-chunk/new_free", test_memory_chunk_new_free);
-	g_test_add_func("/memory-chunk/get", test_memory_chunk_get);
-	g_test_add_func("/memory-chunk/reset", test_memory_chunk_reset);
+	g_test_add_func("/core/memory-chunk/new_free", test_memory_chunk_new_free);
+	g_test_add_func("/core/memory-chunk/get", test_memory_chunk_get);
+	g_test_add_func("/core/memory-chunk/reset", test_memory_chunk_reset);
 }

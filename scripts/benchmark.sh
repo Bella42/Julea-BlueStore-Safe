@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # JULEA - Flexible storage framework
-# Copyright (C) 2017-2019 Michael Kuhn
+# Copyright (C) 2017-2020 Michael Kuhn
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -32,6 +32,7 @@ SELF_BASE="${SELF_PATH##*/}"
 set_path
 set_library_path
 set_backend_path
+set_hdf_path
 
 run_benchmark ()
 {

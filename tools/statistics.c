@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -19,6 +19,8 @@
 #include <julea-config.h>
 
 #include <glib.h>
+
+#include <locale.h>
 
 #include <julea.h>
 
@@ -64,6 +66,9 @@ main(int argc, char** argv)
 
 	(void)argc;
 	(void)argv;
+
+	// Explicitly enable UTF-8 since functions such as g_format_size might return UTF-8 characters.
+	setlocale(LC_ALL, "C.UTF-8");
 
 	get_all = 1;
 	configuration = j_configuration();

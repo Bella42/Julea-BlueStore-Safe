@@ -1,6 +1,6 @@
 /*
  * JULEA - Flexible storage framework
- * Copyright (C) 2010-2019 Michael Kuhn
+ * Copyright (C) 2010-2020 Michael Kuhn
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -109,7 +109,7 @@ j_kv_uri_parse(JKVURI* uri, gchar const* uri_)
 			break;
 	}
 
-	if (!g_str_has_prefix(uri_, scheme_prefix))
+	if (scheme_prefix == NULL || !g_str_has_prefix(uri_, scheme_prefix))
 	{
 		goto error;
 	}

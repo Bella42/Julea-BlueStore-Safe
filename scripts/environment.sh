@@ -1,5 +1,5 @@
 # JULEA - Flexible storage framework
-# Copyright (C) 2017-2019 Michael Kuhn
+# Copyright (C) 2017-2020 Michael Kuhn
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -24,11 +24,48 @@ SELF_BASE="${SELF_PATH##*/}"
 . "${SELF_DIR}/common"
 . "${SELF_DIR}/spack"
 
+JULEA_ENVIRONMENT_SOURCED=1
+
+# See https://stackoverflow.com/a/28776166
+if test -n "${BASH_VERSION}"
+then
+	(return 0 2>/dev/null) || JULEA_ENVIRONMENT_SOURCED=0
+elif test -n "${ZSH_EVAL_CONTEXT}"
+then
+	case "${ZSH_EVAL_CONTEXT}" in
+		*:file)
+			;;
+		*)
+			JULEA_ENVIRONMENT_SOURCED=0
+			;;
+	esac
+fi
+
+if test "${JULEA_ENVIRONMENT_SOURCED}" -eq 0
+then
+	printf 'Warning: This script should be sourced using ". %s", otherwise changes to the environment will not persist.\n' "${SELF_PATH}" >&2
+fi
+
+JULEA_ENVIRONMENT=1
+
 set_path
 set_library_path
 set_pkg_config_path
 set_backend_path
+set_hdf_path
 
 SPACK_DIR="$(get_directory "${SELF_DIR}/..")/dependencies"
 
 spack_load_dependencies
+
+# Do not filter out paths contained in CPATH and LIBRARY_PATH.
+PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
+PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
+
+export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS
+export PKG_CONFIG_ALLOW_SYSTEM_LIBS
+
+# FIXME The Spack pkg-config does not search in global directories and Meson does not provide a way to override this
+PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/lib64/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
+
+export PKG_CONFIG_PATH
